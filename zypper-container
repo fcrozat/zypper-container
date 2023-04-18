@@ -1,0 +1,9 @@
+#!/bin/bash
+
+if [ "$1" = "in" -o "$1" = "install" ]; then 
+  echo podman container runlabel install $2
+elif [ "$1" = "se" -o "$1" = "search" ]; then
+  podman search "registry.opensuse.org/suse/alp/workloads/$2"
+elif [ "$1" = "rm" -o "$1" = "remove" ]; then
+  echo podman container runlabel uninstall $2
+fi

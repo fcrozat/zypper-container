@@ -1,9 +1,17 @@
 #!/bin/bash
+# should be either available in PATH or installed in /usr/lib/zypper/commands
+
+# for now, ALP workloads can be available in different locations, this will be fixed on registry side with a unified namespace and ALP containers are build with ALP sources
+ALP_REGISTRY_PATHS="registry.opensuse.org/suse/alp/workloads/tumbleweed_containerfiles/suse/alp/workloads/ registry.opensuse.org/suse/alp/workloads/bci_containerfiles/suse/alp/workloads/ registry.opensuse.org/suse/alp/workloads/tumbleweed_images/suse/alp/workloads/ registry.opensuse.org/suse/alp/workloads/sle_15sp4_containerfiles/suse/alp/workloads/"
 
 if [ "$1" = "in" -o "$1" = "install" ]; then 
-  echo podman container runlabel install $2
+ for registry in $ALP_REGISTRY_PATHS ; do
+   podman container runlabel install "$registry$2" && break
+ done
 elif [ "$1" = "se" -o "$1" = "search" ]; then
-  podman search "registry.opensuse.org/suse/alp/workloads/$2"
+  podman image search "registry.opensuse.org/suse/alp/workloads/$2"
 elif [ "$1" = "rm" -o "$1" = "remove" ]; then
-  echo podman container runlabel uninstall $2
+ for registry in $ALP_REGISTRY_PATHS ; do
+   podman container runlabel uninstall "$registry$2" && break
+ done
 fi

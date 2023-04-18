@@ -1,5 +1,5 @@
 #!/bin/bash
-# should be either available in PATH or installed in /usr/lib/zypper/commands
+# should be either available in PATH or installed in /usr/lib/zypper/commands under name "zypper-container"
 
 # for now, ALP workloads can be available in different locations, this will be fixed on registry side with a unified namespace and ALP containers are build with ALP sources
 ALP_REGISTRY_PATHS="registry.opensuse.org/suse/alp/workloads/tumbleweed_containerfiles/suse/alp/workloads/ registry.opensuse.org/suse/alp/workloads/bci_containerfiles/suse/alp/workloads/ registry.opensuse.org/suse/alp/workloads/tumbleweed_images/suse/alp/workloads/ registry.opensuse.org/suse/alp/workloads/sle_15sp4_containerfiles/suse/alp/workloads/"
@@ -14,4 +14,6 @@ elif [ "$1" = "rm" -o "$1" = "remove" ]; then
  for registry in $ALP_REGISTRY_PATHS ; do
    podman container runlabel uninstall "$registry$2" && break
  done
+else
+	echo "usage: zypper container in | search | rm "
 fi

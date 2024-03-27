@@ -2,11 +2,32 @@
 # should be either available in PATH or installed in /usr/lib/zypper/commands under name "zypper-container"
 
 # for now, ALP workloads can be available in different locations, this will be fixed on registry side with a unified namespace and ALP containers are build with ALP sources
-ALP_REGISTRY_PATHS="registry.opensuse.org/suse/alp/workloads/tumbleweed_containerfiles/suse/alp/workloads/ registry.opensuse.org/suse/alp/workloads/bci_containerfiles/suse/alp/workloads/ registry.opensuse.org/suse/alp/workloads/tumbleweed_images/suse/alp/workloads/ registry.opensuse.org/suse/alp/workloads/sle_15sp4_containerfiles/suse/alp/workloads/"
+ALP_REGISTRY_PATHS="localhost/ registry.opensuse.org/suse/alp/workloads/tumbleweed_containerfiles/suse/alp/workloads/ registry.opensuse.org/suse/alp/workloads/bci_containerfiles/suse/alp/workloads/ registry.opensuse.org/suse/alp/workloads/tumbleweed_images/suse/alp/workloads/ registry.opensuse.org/suse/alp/workloads/sle_15sp4_containerfiles/suse/alp/workloads/"
 
-if [ "$1" = "in" -o "$1" = "install" ]; then 
+
+if [ "$1" = "download" ]; then
  for registry in $ALP_REGISTRY_PATHS ; do
-   podman container runlabel install "$registry$2" && break
+   podman inspect $2 >/dev/null && echo "already downloaded" && break
+   podman image pull "$registry$2" && break
+ done
+elif [ "$1" = "in" -o "$1" = "install" ]; then
+ for registry in $ALP_REGISTRY_PATHS ; do
+	 quadlet=$(podman inspect "$registry$2" | jq '.[0].Labels["com.suse.quadlet"]')
+	 echo quadlet $quadlet
+	 if [ $UID == 0 ]; then
+		 TARGET=/etc/containers/systemd/
+	 else
+		 TARGET=${XDG_CONFIG_HOME:-$HOME/.config}/containers/systemd/
+	 fi
+	 cat << EOF > /tmp/quadlet-install.sh
+#!/bin/bash
+mnt=\$(podman image mount $registry$2)
+install -m644 -t $TARGET \$mnt/$quadlet
+echo "[Image]\nImage=$registry$2\n" > $TARGET/\$(basename $quadlet .container).image
+EOF
+	 chmod +x /tmp/quadlet-install.sh
+	 podman unshare /tmp/quadlet-install.sh
+	 break
  done
 elif [ "$1" = "se" -o "$1" = "search" ]; then
   podman image search "registry.opensuse.org/suse/alp/workloads/$2"
